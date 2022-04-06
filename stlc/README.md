@@ -1,1 +1,0 @@
-# Simply typed lambda calculus

@@ -40,6 +40,3 @@ infer env = \case
           then Left (TyMismatch conseqTyp altTyp)
           else return conseqTyp
       _ -> Left (TyMismatch predTyp TyBool)
-
-identity :: Term
-identity = TmAbs "x" TyBool (TmVar "x")
