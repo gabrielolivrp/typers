@@ -25,10 +25,10 @@ infer env = \case
     functTyp <- infer env funct
     argumentTyp <- infer env argument
     case functTyp of
-      (TyArrow paramTyp bodyTyp)
-        | paramTyp == argumentTyp -> return bodyTyp
-      (TyArrow paramTyp _) ->
-        Left (TyMismatch functTyp argumentTyp)
+      (TyArrow paramTyp bodyTyp) ->
+        if paramTyp == argumentTyp
+          then return bodyTyp
+          else Left (TyMismatch paramTyp argumentTyp)
       _ -> Left (TyExpectedFunction functTyp)
   TmIf pred conseq alt -> do
     predTyp <- infer env pred
