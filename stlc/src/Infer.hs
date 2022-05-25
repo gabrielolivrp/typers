@@ -5,7 +5,7 @@ module Infer (infer) where
 import qualified Env as E
 import Types
 
-type Env = E.Env String Typ
+type Env = E.Env Ident Typ
 
 infer :: Env -> Term -> Either TypError Typ
 infer env = \case

@@ -1,6 +1,7 @@
 module Types where
 
-type Name = String
+newtype Ident = Ident String
+  deriving (Eq, Ord, Show)
 
 data Typ
   = TyBool
@@ -14,8 +15,8 @@ data Term
   | TmTrue
   | TmFalse
   | TmInt Int
-  | TmVar Name
-  | TmAbs Name Typ Term
+  | TmVar Ident
+  | TmAbs Ident Typ Term
   | TmApp Term Term
   | TmIf Term Term Term
   deriving (Eq, Show)
@@ -23,5 +24,5 @@ data Term
 data TypError
   = TyMismatch Typ Typ
   | TyExpectedFunction Typ
-  | TyUnboundVar Name
+  | TyUnboundVar Ident
   deriving (Eq, Show)

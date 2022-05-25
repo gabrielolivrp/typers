@@ -5,7 +5,7 @@ import Infer
 import Types
 
 identity :: Term
-identity = TmAbs "x" TyBool (TmVar "x")
+identity = TmAbs (Ident "x") TyBool (TmVar (Ident "x"))
 
 x = infer E.empty identity
 
