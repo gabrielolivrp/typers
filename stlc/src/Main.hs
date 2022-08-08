@@ -1,13 +1,12 @@
 module Main where
 
-import qualified Env as E
 import Infer
-import Types
+import Syntax
 
 identity :: Term
-identity = TmAbs (Ident "x") TyBool (TmVar (Ident "x"))
+identity = TmAbs "x" TUnit (TmVar "x")
 
-x = infer E.empty identity
+x = infer emptyContext identity
 
 main :: IO ()
 main = print x
