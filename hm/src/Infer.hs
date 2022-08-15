@@ -10,6 +10,7 @@ import Syntax
 -- https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.18.9348&rep=rep1&type=pdf
 -- https://blog.stimsina.com/post/implementing-a-hindley-milner-type-system-part-2
 -- https://github.com/sdiehl/write-you-a-haskell/blob/master/006_hindley_milner.md
+-- https://en.wikipedia.org/wiki/Hindley%E2%80%93Milner_type_system
 
 -- Unique value
 newtype Unique = Unique
@@ -150,7 +151,7 @@ infer (Context ctx) (TmVar x) =
 --
 --  τ = newvar    Γ, param: τ ⊢ body:τ',S
 -- --------------------------------------- (App)
---    Γ ⊢ λparam. body: Sτ → τ',S
+--    Γ ⊢ λparam. body: S τ → τ',S
 infer ctx (TmAbs param body) = do
   t <- newvar
   let ctx' = extend param (Forall [] t) ctx
@@ -165,8 +166,8 @@ infer ctx (TmApp func argm) = do
   t <- newvar
   (s0, t0) <- infer ctx func
   (s1, t1) <- infer (apply s0 ctx) argm
-  s2 <- mgu (apply s1 t0) (TArrow t t1)
-  pure (s0 `compose` s1 `compose` s2, apply s2 t)
+  s2 <- mgu (apply s1 t0) (TArrow t1 t)
+  pure (s2 `compose` s1 `compose` s0, apply s2 t)
 --                          ____
 --  Γ e0:τ,S0      S0 Γ, x: S0 Γ(τ) ⊢ e1:τ',S1
 -- --------------------------------------------- (Let)
@@ -176,7 +177,7 @@ infer ctx (TmLet x e0 e1) = do
   let ctx' = apply s0 ctx
   let t' = gen ctx' t
   (s1, t') <- infer (extend x t' ctx') e1
-  return (s0 `compose` s1, t')
+  return (s1 `compose` s0, t')
 
 letters :: [String]
 letters = [1 ..] >>= flip replicateM ['a' .. 'z']
@@ -188,6 +189,7 @@ newvar = do
   return $ TVar $ MkTVar (letters !! count s)
 
 runInfer :: InferM (Subst, Typ) -> Either TypeError Typ
-runInfer m = case evalState (runExceptT m) (Unique 0) of
-  Left err -> Left err
-  Right typ -> (Right . snd) typ
+runInfer m =
+  case evalState (runExceptT m) (Unique 0) of
+    Left err -> Left err
+    Right (s, t) -> Right $ apply s t
