@@ -34,12 +34,12 @@ typeCheck :: Context -> Term -> Either TypeError Typ
 typeCheck ctx = \case
   --
   -- -------------- (Unit)
-  --  Γ ⊢ unit: Unit
+  --  Γ ⊢ (): Unit
   TmUnit -> pure TUnit
   --
-  -- 0: Nat
+  -- Zero: Nat
   -- ------------ (Zero)
-  -- Γ ⊢ 0: Nat
+  -- Γ ⊢ Zero: Nat
   --
   TmZero -> pure TNat
   --
@@ -64,7 +64,7 @@ typeCheck ctx = \case
   --
   --       Γ, param:σ ⊢ body:τ
   -- ------------------------------- (Abs)
-  --  Γ ⊢ (λparam:σ. body): (σ → τ)
+  --  Γ ⊢ (λparam:σ. body): (σ -> τ)
   --
   TmAbs param t body -> do
     let ctx' = M.insert param t ctx

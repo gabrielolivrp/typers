@@ -4,7 +4,7 @@ type Name = String
 
 -- τ ::= Unit     (Unit type)
 --     | Nat      (Natural numbers)
---     | τ → τ    (Function type)
+--     | τ -> τ    (Function type)
 data Typ
   = TNat
   | TUnit
