@@ -38,7 +38,7 @@ data Term
 instance Show Term where
   show TmUnit = "()"
   show TmZero = "0"
-  show (TmSucc n) = show (1 + read (show n))
+  show (TmSucc n) = "succ " ++ show n
   show (TmVar x) = x
   show (TmAbs x t e) = "λ" ++ x ++ ": " ++ show t ++ ". " ++ show e
   show (TmApp e1 e2) =
