@@ -37,16 +37,13 @@ typeCheck ctx = \case
   --  Γ ⊢ (): Unit
   TmUnit -> pure TUnit
   --
-  -- Zero: Nat
   -- ------------ (Zero)
   -- Γ ⊢ Zero: Nat
-  --
   TmZero -> pure TNat
   --
   --  Γ ⊢ t: Nat
   -- ---------------- (Succ)
   -- Γ ⊢ Succ t: Nat
-  --
   TmSucc t -> do
     t' <- typeCheck ctx t
     if t' == TNat
@@ -56,7 +53,6 @@ typeCheck ctx = \case
   --  x:σ ∈ Γ
   -- --------- (Var)
   --  Γ ⊢ x:σ
-  --
   TmVar x ->
     case M.lookup x ctx of
       Just t -> pure t
@@ -65,7 +61,6 @@ typeCheck ctx = \case
   --       Γ, param:σ ⊢ body:τ
   -- ------------------------------- (Abs)
   --  Γ ⊢ (λparam:σ. body): (σ -> τ)
-  --
   TmAbs param t body -> do
     let ctx' = M.insert param t ctx
     bodyT <- typeCheck ctx' body
@@ -74,7 +69,6 @@ typeCheck ctx = \case
   --   Γ ⊢ func:σ → τ   Γ ⊢ argm:σ
   -- ------------------------------ (App)
   --      Γ ⊢ func argm:τ
-  --
   TmApp func argm -> do
     funcT <- typeCheck ctx func
     argmT <- typeCheck ctx argm
