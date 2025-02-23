@@ -1,10 +1,10 @@
-module Infer where
+module Typer where
 
 import Control.Monad.Except
 import Control.Monad.State
-import qualified Data.Map as M
-import qualified Data.Set as S
-import Syntax
+import Data.Map qualified as M
+import Data.Set qualified as S
+import Tree
 
 -- References
 -- https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.18.9348&rep=rep1&type=pdf
@@ -22,7 +22,7 @@ newtype Unique = Unique
 --     | Γ, x : σ
 newtype Context = Context (M.Map String Scheme)
 
--- Substitution
+-- Type substitution
 type Subst = M.Map TVar Typ
 
 -- Type errors
@@ -135,8 +135,8 @@ infer :: Context -> Term -> InferM (Subst, Typ)
 --  Γ ⊢ n:Int,∅
 infer _ (TmLit LInt {}) = pure (emptySubst, TCon "Int")
 --
--- ------------------ Bool   ------------------- Bool
---  Γ ⊢ False:Bool,∅           Γ ⊢ True:Bool,∅
+-- ------------------ (Bool-false)   ------------------- (Bool-true)
+--  Γ ⊢ False:Bool,∅                  Γ ⊢ True:Bool,∅
 infer _ (TmLit LBool {}) = pure (emptySubst, TCon "Bool")
 --
 --  x:σ ∈ Γ     τ = inst(σ)
@@ -150,7 +150,7 @@ infer (Context ctx) (TmVar x) =
       pure (emptySubst, t)
 --
 --  τ = newvar    Γ, param: τ ⊢ body:τ',S
--- --------------------------------------- (App)
+-- --------------------------------------- (Abs)
 --    Γ ⊢ λparam. body: S τ → τ',S
 infer ctx (TmAbs param body) = do
   t <- newvar
@@ -160,7 +160,7 @@ infer ctx (TmAbs param body) = do
 --
 --  Γ ⊢ func:τ0,S0           S0 Γ ⊢ argm:τ1,S1
 --  τ' = newvar              S2 = mgu(S1 τ0, τ1 -> τ')
--- ---------------------------------------------------- (Abs)
+-- ---------------------------------------------------- (App)
 --           Γ ⊢ func argm : S2 τ', S2 S1 S0
 infer ctx (TmApp func argm) = do
   t <- newvar
@@ -177,7 +177,7 @@ infer ctx (TmLet x e0 e1) = do
   let ctx' = apply s0 ctx
   let t' = gen ctx' t
   (s1, t') <- infer (extend x t' ctx') e1
-  return (s1 `compose` s0, t')
+  pure (s1 `compose` s0, t')
 
 letters :: [String]
 letters = [1 ..] >>= flip replicateM ['a' .. 'z']
@@ -186,10 +186,10 @@ newvar :: InferM Typ
 newvar = do
   s <- get
   put s {count = count s + 1}
-  return $ TVar $ MkTVar (letters !! count s)
+  (pure . TVar . MkTVar) (letters !! count s)
 
-runInfer :: InferM (Subst, Typ) -> Either TypeError Typ
-runInfer m =
-  case evalState (runExceptT m) (Unique 0) of
+runInfer :: Term -> Either TypeError Typ
+runInfer term =
+  case evalState (runExceptT (infer emptyContext term)) (Unique 0) of
     Left err -> Left err
-    Right (s, t) -> Right $ apply s t
+    Right (s, t) -> Right (apply s t)
